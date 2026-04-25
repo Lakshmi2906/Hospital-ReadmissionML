@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Admission - MediPredict AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #14b8a6 100%);
+            z-index: -1;
+        }
+        .hero-section {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.95), rgba(6, 182, 212, 0.95));
+            padding: 40px 20px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .hero-title {
+            font-size: 2.5em;
+            margin: 0;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .hero-subtitle {
+            font-size: 1.2em;
+            margin: 10px 0 0 0;
+            opacity: 0.95;
+        }
+        .admission-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 15px;
+            margin: 30px 0 25px 0;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+        }
+        .section-header i {
+            font-size: 1.8em;
+        }
+        .section-header h3 {
+            margin: 0;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        .form-group-full {
+            grid-column: 1 / -1;
+        }
+        .input-group {
+            margin-bottom: 0;
+        }
+        .input-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        .input-group label i {
+            color: #0ea5e9;
+            font-size: 1.1em;
+        }
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+            color: white;
+            padding: 18px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 30px;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(14, 165, 233, 0.4);
+        }
+        .btn-submit i {
+            margin-right: 10px;
+        }
+        .patients-list {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        .patients-list h2 {
+            color: #0ea5e9;
+            margin: 0 0 25px 0;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .patient-card {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 12px;
+            border-left: 5px solid #0ea5e9;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .patient-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.2);
+        }
+        .patient-card strong {
+            color: #0ea5e9;
+            font-size: 1.1em;
+        }
+        .alert {
+            padding: 18px 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            display: none;
+            font-weight: 500;
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .alert-success {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border-left: 5px solid #10b981;
+        }
+        .alert-error {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            border-left: 5px solid #ef4444;
+        }
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .hero-title {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-heartbeat"></i>
+                <span>MediPredict AI</span>
+            </div>
+            <div class="user-section">
+                <span class="welcome-text"><i class="fas fa-user-circle"></i> {{ username }}</span>
+                <a href="/logout" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <h1 class="hero-title">
+            <i class="fas fa-user-plus"></i> Patient Admission Portal
+        </h1>
+        <p class="hero-subtitle">Register patients with comprehensive caregiver information for better care coordination</p>
+    </div>
+
+    <div class="admission-container">
+        <div class="form-card">
+            <div id="alert" class="alert"></div>
+
+            <form id="admissionForm">
+                <div class="section-header">
+                    <i class="fas fa-user"></i>
+                    <h3>Patient Information</h3>
+                </div>
+            
+            <div class="form-row">
+                <div class="input-group">
+                    <label><i class="fas fa-id-card"></i> Patient Name</label>
+                    <input type="text" name="patient_name" required placeholder="Full name">
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-birthday-cake"></i> Age</label>
+                    <input type="number" name="age" required min="1" max="120" placeholder="Age">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="input-group">
+                    <label><i class="fas fa-venus-mars"></i> Gender</label>
+                    <select name="gender" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-phone"></i> Phone Number</label>
+                    <input type="tel" name="phone" placeholder="Patient phone">
+                </div>
+            </div>
+
+            <div class="input-group form-group-full">
+                <label><i class="fas fa-map-marker-alt"></i> Address</label>
+                <textarea name="address" rows="2" placeholder="Full address"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="input-group">
+                    <label><i class="fas fa-language"></i> Language</label>
+                    <select name="language" required>
+                        <option value="">Select Language</option>
+                        <option value="English">English</option>
+                        <option value="Hindi">Hindi</option>
+                        <option value="Tamil">Tamil</option>
+                        <option value="Telugu">Telugu</option>
+                        <option value="Kannada">Kannada</option>
+                        <option value="Malayalam">Malayalam</option>
+                        <option value="Bengali">Bengali</option>
+                        <option value="Marathi">Marathi</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-book-reader"></i> Literacy Level</label>
+                    <select name="literacy_level" required>
+                        <option value="">Select Level</option>
+                        <option value="Literate">Literate</option>
+                        <option value="Semi-literate">Semi-literate</option>
+                        <option value="Illiterate">Illiterate</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="input-group">
+                    <label><i class="fas fa-map"></i> Location Type</label>
+                    <select name="location_type" required>
+                        <option value="">Select Type</option>
+                        <option value="Urban">Urban</option>
+                        <option value="Rural">Rural</option>
+                        <option value="Village">Village</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-mobile-alt"></i> Has Phone Access</label>
+                    <select name="has_phone" required>
+                        <option value="">Select</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <i class="fas fa-user-friends"></i>
+                <h3>Caregiver Information</h3>
+            </div>
+
+            <div class="form-row">
+                <div class="input-group">
+                    <label><i class="fas fa-user"></i> Caregiver Name</label>
+                    <input type="text" name="caregiver_name" required placeholder="Full name">
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-heart"></i> Relationship</label>
+                    <select name="caregiver_relationship" required>
+                        <option value="">Select Relationship</option>
+                        <option value="Spouse">Spouse</option>
+                        <option value="Son">Son</option>
+                        <option value="Daughter">Daughter</option>
+                        <option value="Parent">Parent</option>
+                        <option value="Sibling">Sibling</option>
+                        <option value="Neighbor">Neighbor</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="input-group">
+                    <label><i class="fas fa-phone"></i> Caregiver Phone</label>
+                    <input type="tel" name="caregiver_phone" required placeholder="Caregiver phone">
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-book"></i> Can Caregiver Read</label>
+                    <select name="caregiver_can_read" required>
+                        <option value="">Select</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group form-group-full">
+                <label><i class="fas fa-bell"></i> Preferred Contact Method</label>
+                <select name="preferred_contact" required>
+                    <option value="">Select Method</option>
+                    <option value="SMS">SMS</option>
+                    <option value="Voice Call">Voice Call</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Home Visit">Home Visit</option>
+                </select>
+            </div>
+
+            <div class="section-header">
+                <i class="fas fa-phone-square"></i>
+                <h3>Alternative Contact (Optional)</h3>
+            </div>
+
+            <div class="form-row">
+                <div class="input-group">
+                    <label><i class="fas fa-user"></i> Name</label>
+                    <input type="text" name="alternative_contact_name" placeholder="Alternative contact name">
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-phone"></i> Phone</label>
+                    <input type="tel" name="alternative_contact_phone" placeholder="Alternative phone">
+                </div>
+            </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i> Register Patient
+                </button>
+            </form>
+        </div>
+
+        <div class="patients-list">
+            <h2 style="color: #0ea5e9; margin-bottom: 20px;">
+                <i class="fas fa-list"></i> Recently Registered Patients
+            </h2>
+            {% if patients %}
+                {% for patient in patients[:10] %}
+                <div class="patient-card">
+                    <strong>{{ patient.patient_name }}</strong> | 
+                    Age: {{ patient.age }} | 
+                    {{ patient.location_type }} | 
+                    Caregiver: {{ patient.caregiver_name }} ({{ patient.caregiver_relationship }})
+                    <br><small style="color: #64748b;">Registered: {{ patient.registered_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p style="text-align: center; color: #64748b;">No patients registered yet</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('admissionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const alert = document.getElementById('alert');
+            
+            try {
+                const response = await fetch('/add-patient', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert.className = 'alert alert-success';
+                    alert.textContent = '✓ Patient registered successfully!';
+                    alert.style.display = 'block';
+                    this.reset();
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    alert.className = 'alert alert-error';
+                    alert.textContent = '✗ Error: ' + data.error;
+                    alert.style.display = 'block';
+                }
+            } catch (error) {
+                alert.className = 'alert alert-error';
+                alert.textContent = '✗ Error: ' + error.message;
+                alert.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

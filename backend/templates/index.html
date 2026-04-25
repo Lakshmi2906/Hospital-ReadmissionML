@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Readmission Prediction System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="background-overlay"></div>
+    
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-heartbeat"></i>
+                <span>MediPredict AI</span>
+            </div>
+            <div class="user-section">
+                <span class="welcome-text"><i class="fas fa-user-circle"></i> Welcome, {{ username }}</span>
+                <a href="/logout" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <i class="fas fa-hospital-user"></i>
+                Hospital Readmission Prediction
+            </h1>
+            <p class="hero-subtitle">Advanced AI-powered prediction system for 30-day readmission risk assessment</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-card">
+            <div class="card-header">
+                <i class="fas fa-user-md"></i>
+                <h2>Patient Information</h2>
+                <p>Select patient or enter clinical details for readmission risk analysis</p>
+            </div>
+            
+            {% if patients %}
+            <div class="form-group" style="margin-bottom: 30px;">
+                <label for="patientSelect" style="font-size: 1.1em; color: #0ea5e9;">
+                    <i class="fas fa-users"></i>
+                    Select Registered Patient (Optional)
+                </label>
+                <select id="patientSelect" style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #e2e8f0; font-size: 1em;">
+                    <option value="">-- Or enter details manually below --</option>
+                    {% for patient in patients %}
+                    <option value="{{ patient._id }}" 
+                            data-age="{{ patient.age }}"
+                            data-name="{{ patient.patient_name }}"
+                            data-caregiver="{{ patient.caregiver_name }}"
+                            data-caregiver-phone="{{ patient.caregiver_phone }}"
+                            data-language="{{ patient.language }}"
+                            data-literacy="{{ patient.literacy_level }}"
+                            data-contact="{{ patient.preferred_contact }}">
+                        {{ patient.patient_name }} - Age {{ patient.age }} ({{ patient.location_type }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            
+            <form id="predictionForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="age">
+                            <i class="fas fa-birthday-cake"></i>
+                            Age
+                        </label>
+                        <input type="number" id="age" name="age" required min="0" max="120" placeholder="Enter age">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="time_in_hospital">
+                            <i class="fas fa-bed"></i>
+                            Time in Hospital (days)
+                        </label>
+                        <input type="number" id="time_in_hospital" name="time_in_hospital" required min="0" placeholder="Days in hospital">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="n_lab_procedures">
+                            <i class="fas fa-flask"></i>
+                            Lab Procedures
+                        </label>
+                        <input type="number" id="n_lab_procedures" name="n_lab_procedures" required min="0" placeholder="Number of procedures">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="n_procedures">
+                            <i class="fas fa-procedures"></i>
+                            Medical Procedures
+                        </label>
+                        <input type="number" id="n_procedures" name="n_procedures" required min="0" placeholder="Number of procedures">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="n_medications">
+                            <i class="fas fa-pills"></i>
+                            Medications
+                        </label>
+                        <input type="number" id="n_medications" name="n_medications" required min="0" placeholder="Number of medications">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="n_outpatient">
+                            <i class="fas fa-walking"></i>
+                            Outpatient Visits
+                        </label>
+                        <input type="number" id="n_outpatient" name="n_outpatient" required min="0" placeholder="Outpatient visits">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="n_inpatient">
+                            <i class="fas fa-hospital"></i>
+                            Inpatient Visits
+                        </label>
+                        <input type="number" id="n_inpatient" name="n_inpatient" required min="0" placeholder="Inpatient visits">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="n_emergency">
+                            <i class="fas fa-ambulance"></i>
+                            Emergency Visits
+                        </label>
+                        <input type="number" id="n_emergency" name="n_emergency" required min="0" placeholder="Emergency visits">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-predict">
+                    <i class="fas fa-brain"></i>
+                    Predict Readmission Risk
+                </button>
+            </form>
+            
+            <input type="hidden" id="selectedPatientId" value="">
+            <input type="hidden" id="caregiverInfo" value="">
+            
+            <div id="result" class="result hidden">
+                <div class="result-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Prediction Result</h3>
+                </div>
+                <div class="result-content">
+                    <div class="prediction-box">
+                        <div class="prediction-icon" id="predictionIcon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <p class="prediction-text" id="predictionText"></p>
+                        <div class="probability-bar">
+                            <div class="probability-fill" id="probabilityFill"></div>
+                        </div>
+                        <p class="probability-text" id="probabilityText"></p>
+                    </div>
+                    
+                    <div id="caregiverNotifySection" class="caregiver-notify hidden" style="margin-top: 20px; text-align: center; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
+                        <button id="btnNotifyCaregiver" class="btn-notify">
+                            <i class="fas fa-phone-alt"></i>
+                            Notify Caregiver Now
+                        </button>
+                        <p id="notifyStatus" style="margin-top: 10px; font-size: 0.9em; color: #64748b;"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p><i class="fas fa-shield-alt"></i> Secure & Confidential Healthcare Analytics</p>
+            <p>&copy; 2024 MediPredict AI. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script>
+        const patientSelect = document.getElementById('patientSelect');
+        if (patientSelect) {
+            patientSelect.addEventListener('change', function() {
+                const selected = this.options[this.selectedIndex];
+                if (selected.value) {
+                    document.getElementById('age').value = selected.dataset.age || '';
+                    document.getElementById('selectedPatientId').value = selected.value;
+                    
+                    const caregiverData = {
+                        name: selected.dataset.caregiver,
+                        phone: selected.dataset.caregiverPhone,
+                        language: selected.dataset.language,
+                        literacy: selected.dataset.literacy,
+                        contact: selected.dataset.contact
+                    };
+                    document.getElementById('caregiverInfo').value = JSON.stringify(caregiverData);
+                } else {
+                    document.getElementById('selectedPatientId').value = '';
+                    document.getElementById('caregiverInfo').value = '';
+                }
+            });
+        }
+        
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            // Add patient ID if selected
+            const patientId = document.getElementById('selectedPatientId');
+            if (patientId && patientId.value) {
+                formData.append('patient_id', patientId.value);
+            }
+            
+            const btn = document.querySelector('.btn-predict');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                const resultDiv = document.getElementById('result');
+                const predictionText = document.getElementById('predictionText');
+                const probabilityText = document.getElementById('probabilityText');
+                const probabilityFill = document.getElementById('probabilityFill');
+                const predictionIcon = document.getElementById('predictionIcon');
+                
+                predictionText.textContent = data.prediction;
+                probabilityText.textContent = 'Confidence: ' + data.probability;
+                
+                const probValue = parseFloat(data.probability);
+                probabilityFill.style.width = probValue + '%';
+                
+                if (data.prediction.includes('Not Readmitted')) {
+                    predictionIcon.innerHTML = '<i class="fas fa-smile-beam"></i>';
+                    predictionIcon.style.background = 'linear-gradient(135deg, #51cf66, #37b24d)';
+                    probabilityFill.style.background = 'linear-gradient(90deg, #51cf66, #37b24d)';
+                    predictionText.style.color = '#37b24d';
+                } else {
+                    predictionIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                    predictionIcon.style.background = 'linear-gradient(135deg, #ff6b6b, #ee5a6f)';
+                    probabilityFill.style.background = 'linear-gradient(90deg, #ff6b6b, #ee5a6f)';
+                    predictionText.style.color = '#ff6b6b';
+                }
+                
+                // Show notification button if patient is selected
+                const notifySection = document.getElementById('caregiverNotifySection');
+                if (document.getElementById('selectedPatientId').value) {
+                    notifySection.classList.remove('hidden');
+                    document.getElementById('notifyStatus').textContent = '';
+                } else {
+                    notifySection.classList.add('hidden');
+                }
+                
+                resultDiv.classList.remove('hidden');
+                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                btn.innerHTML = '<i class="fas fa-brain"></i> Predict Readmission Risk';
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btnNotifyCaregiver').addEventListener('click', async function() {
+            const patientId = document.getElementById('selectedPatientId').value;
+            const predictionResult = document.getElementById('predictionText').textContent;
+            const probability = document.getElementById('probabilityText').textContent.replace('Confidence: ', '');
+            
+            const btn = this;
+            const statusText = document.getElementById('notifyStatus');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Call...';
+            statusText.textContent = 'Contacting Twilio service...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('patient_id', patientId);
+                formData.append('prediction_result', predictionResult);
+                formData.append('probability', parseFloat(probability));
+                
+                const response = await fetch('/notify-caregiver-call', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    btn.innerHTML = '<i class="fas fa-check"></i> Call Triggered';
+                    btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                    statusText.textContent = 'Success: ' + (data.final_status || 'Notification sent successfully');
+                    statusText.style.color = '#059669';
+                } else {
+                    throw new Error(data.error || 'Failed to trigger notification');
+                }
+            } catch (error) {
+                btn.innerHTML = '<i class="fas fa-phone-alt"></i> Retry Notification';
+                btn.disabled = false;
+                statusText.textContent = 'Error: ' + error.message;
+                statusText.style.color = '#ef4444';
+            }
+        });
+    </script>
+</body>
+</html>

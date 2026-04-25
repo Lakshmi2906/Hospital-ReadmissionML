@@ -2,9 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [ main ]   # ❗ removed pull_request (important)
 
 jobs:
   build-and-deploy:
@@ -32,7 +30,13 @@ jobs:
     - name: Test model loading
       run: |
         cd backend
-        python -c "import joblib; model_data = joblib.load('model.pkl'); print('Model loaded successfully')"
+        python -c "import joblib; joblib.load('model.pkl'); print('Model OK')"
+
+    # ✅ DEBUG STEP (VERY IMPORTANT)
+    - name: Debug secrets
+      run: |
+        echo "USERNAME = ${{ secrets.DOCKERHUB_USERNAME }}"
+        echo "Token exists check"
     
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2

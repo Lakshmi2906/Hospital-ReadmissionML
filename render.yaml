@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: hospital-readmission
+    env: python
+    buildCommand: cd backend && pip install -r requirements.txt && python train.py
+    startCommand: gunicorn --chdir backend app:app
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: TWILIO_SID
+        sync: false
+      - key: TWILIO_AUTH
+        sync: false
+      - key: TWILIO_PHONE
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.9.0
